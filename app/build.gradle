@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply from: 'versioning.gradle'
 
 android {
     compileSdkVersion 25
@@ -7,8 +8,8 @@ android {
         applicationId "com.rovercontroller.mtalhaf.rovercontroller"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode buildVersionCode()
+        versionName version
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
