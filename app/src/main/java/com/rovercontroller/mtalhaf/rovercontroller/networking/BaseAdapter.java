@@ -29,7 +29,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class BaseAdapter {
 
-    protected Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    protected Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setLenient().create();
     protected OkHttpClient httpClient;
     protected RestfulRetrofitService service;
     Context context;
