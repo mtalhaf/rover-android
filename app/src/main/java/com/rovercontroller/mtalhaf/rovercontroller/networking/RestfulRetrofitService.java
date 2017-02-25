@@ -2,10 +2,9 @@ package com.rovercontroller.mtalhaf.rovercontroller.networking;
 
 import java.util.Map;
 
-import retrofit2.http.Body;
+import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.QueryMap;
-import rx.Observable;
 
 /**
  * Created by Study on 2/25/2017.
