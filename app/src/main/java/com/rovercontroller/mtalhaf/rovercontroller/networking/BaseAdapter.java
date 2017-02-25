@@ -5,12 +5,16 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.security.KeyStore;
 import java.security.cert.CertificateException;
+import java.util.Arrays;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
@@ -30,7 +34,7 @@ public class BaseAdapter {
     protected RestfulRetrofitService service;
     Context context;
 
-    public BaseAdapter(Context context){
+    public BaseAdapter(Context context) {
         OkHttpClient.Builder okHttpClientBuilder = getUnsafeOkHttpClient();
         httpClient = okHttpClientBuilder.build();
 
@@ -44,39 +48,29 @@ public class BaseAdapter {
         service = restAdapter.create(RestfulRetrofitService.class);
     }
 
-    public RestfulRetrofitService getService(){
+    public RestfulRetrofitService getService() {
         return service;
     }
 
     public static OkHttpClient.Builder getUnsafeOkHttpClient() {
         try {
-            final X509TrustManager[] trustAllCerts = new X509TrustManager[] {
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
-                                                       String authType) throws CertificateException {
-                        }
 
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init((KeyStore) null);
+            TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+            if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+                throw new IllegalStateException("Unexpected default trust managers:" + Arrays.toString(trustManagers));
+            }
 
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
-                                                       String authType) throws CertificateException {
-                        }
+            X509TrustManager trustManager = (X509TrustManager) trustManagers[0];
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, new TrustManager[] { trustManager }, null);
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-
-                        @Override public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return null;
-                        }
-                    }
-            };
-
-            final SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
             OkHttpClient.Builder okHttpClient = new OkHttpClient()
                     .newBuilder()
-                    .sslSocketFactory(sslSocketFactory, trustAllCerts[1])
+                    .sslSocketFactory(sslSocketFactory, trustManager)
                     .hostnameVerifier(new HostnameVerifier() {
                         @Override
                         public boolean verify(String hostname, SSLSession session) {
