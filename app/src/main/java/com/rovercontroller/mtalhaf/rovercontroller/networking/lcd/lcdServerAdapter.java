@@ -13,11 +13,11 @@ import io.reactivex.Observable;
  * Created by Study on 2/25/2017.
  */
 
-public class lcdServerAdapter implements lcdAdapter {
+public class LcdServerAdapter implements LcdAdapter {
 
     RestfulRetrofitService service;
 
-    public lcdServerAdapter(Context context){
+    public LcdServerAdapter(Context context){
         BaseAdapter baseAdapter = new BaseAdapter(context);
         service = baseAdapter.getService();
     }
