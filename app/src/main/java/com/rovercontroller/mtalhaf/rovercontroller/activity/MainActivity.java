@@ -1,7 +1,9 @@
-package com.rovercontroller.mtalhaf.rovercontroller;
+package com.rovercontroller.mtalhaf.rovercontroller.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.rovercontroller.mtalhaf.rovercontroller.R;
 
 public class MainActivity extends AppCompatActivity {
 
