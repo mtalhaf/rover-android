@@ -44,6 +44,10 @@ public class BaseAdapter {
         service = restAdapter.create(RestfulRetrofitService.class);
     }
 
+    public RestfulRetrofitService getService(){
+        return service;
+    }
+
     public static OkHttpClient.Builder getUnsafeOkHttpClient() {
         try {
             final X509TrustManager[] trustAllCerts = new X509TrustManager[] {
