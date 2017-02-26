@@ -8,6 +8,8 @@ import retrofit2.http.QueryMap;
 
 /**
  * Created by Study on 2/25/2017.
+ * This class contains all the methods/ endpoints which are available in the API
+ * All the code in this class is self-explanatory
  */
 
 public interface RestfulRetrofitService {

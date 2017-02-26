@@ -1,6 +1,5 @@
 package com.rovercontroller.mtalhaf.rovercontroller.activity;
 
-import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -23,7 +22,6 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_NETWORK_STATE = 100;
     EditText displayMessageEditText;
     Button displayMessageButton;
 

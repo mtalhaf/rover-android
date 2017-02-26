@@ -29,15 +29,22 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class BaseAdapter {
 
-    protected Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setLenient().create();
+
+    protected Gson gson;
     protected OkHttpClient httpClient;
     protected RestfulRetrofitService service;
     Context context;
 
     public BaseAdapter(Context context) {
+
+        //initiates the gson converter which excludes fields and sets the gson read to be lenient
+        gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setLenient().create();
+
+        //get an unsafe http client which does not checks for ssl certificates or the verification of the host
         OkHttpClient.Builder okHttpClientBuilder = getUnsafeOkHttpClient();
         httpClient = okHttpClientBuilder.build();
 
+        //starts the retrofit adapter and connects to the Api using the httpclient
         Retrofit restAdapter = new Retrofit.Builder()
                 .baseUrl(Urls.getUrl())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -45,6 +52,7 @@ public class BaseAdapter {
                 .client(httpClient)
                 .build();
 
+        //provides the class which contains all the endpoints listed for the API
         service = restAdapter.create(RestfulRetrofitService.class);
     }
 
@@ -52,6 +60,8 @@ public class BaseAdapter {
         return service;
     }
 
+
+    //returns an unsafe http client builder
     public static OkHttpClient.Builder getUnsafeOkHttpClient() {
         try {
 

@@ -11,6 +11,7 @@ import io.reactivex.Observable;
 
 /**
  * Created by Study on 2/25/2017.
+ * implements the methods listed in lcd Adapter
  */
 
 public class LcdServerAdapter implements LcdAdapter {
