@@ -17,14 +17,19 @@ import android.widget.Toast;
 import com.rovercontroller.mtalhaf.rovercontroller.R;
 import com.rovercontroller.mtalhaf.rovercontroller.networking.lcd.LcdAdapter;
 import com.rovercontroller.mtalhaf.rovercontroller.networking.lcd.LcdServerAdapter;
+import com.rovercontroller.mtalhaf.rovercontroller.networking.movement.MovementAdapter;
+import com.rovercontroller.mtalhaf.rovercontroller.networking.movement.MovementServerAdapter;
+import com.rovercontroller.mtalhaf.rovercontroller.utility.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
@@ -43,31 +48,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /*
      * The adapter used to connect to different resources of the API
      */
-    
+
     //contains all the lcd manipulation functions
     LcdAdapter mLcdAdapter;
+    MovementAdapter mMovementAdapter;
     
     /*
      * All the observables and disposables used for connecting to the API
      */
-    
+
     //observable and disposable for displaying a message on the lcd screen
     Observable<String> mDisplayMessageObservable;
     Disposable mDisplayMessageDisposable;
 
+    //observables and disposables for moving the rover
+    Observable<String> mMoveRoverForwardObservable;
+    Disposable mMoveRoverForwardDisposable;
+
+    Observable<String> mMoveRoverBackwardObservable;
+    Disposable mMoveRoverBackwardDisposable;
+
+    Observable<String> mTurnRoverLeftObservalbe;
+    Disposable mTurnRoverLeftDisposable;
+
+    Observable<String> mTurnRoverRightObservalbe;
+    Disposable mTurnRoverRightDisposable;
+
+    Observable<String> mStopRoverObservable;
+    Disposable mStopRoverDisposable;
+
     /*
      * The following code is used to get the gyroscope values from the android device
      */
-    
+
     //Android device sensor manager, this is used to retrieve the 2 accelerometer and magnetic field sensors
     SensorManager mSensorManager;
-    
+
     //sensor variables to hold the accelerometer and magnetic field meter
     Sensor mAccelerometer;
     Sensor mMagneticField;
 
     //publisher to publish the device rotational values
-    PublishSubject<Integer> pitchPublisher;
+    PublishSubject<Integer> mAzimuthPublisher;
+    PublishSubject<Integer> mPitchPublisher;
 
     //hold the gravity and geo magnetic values
     float mGravity[];
@@ -103,22 +126,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         turnRover();
     }
 
-    /*
-     * Turns the rover when the device rotates
-     */
-    private void turnRover() {
-        pitchPublisher
-                .distinctUntilChanged()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Integer>() {
-                    @Override
-                    public void accept(Integer integer) throws Exception {
-                        Log.d("TURN", "Pitch: " + integer);
-                    }
-                });
-    }
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -147,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void setUpVariables() {
         //sets up the lcd adapter
         mLcdAdapter = new LcdServerAdapter(this.getApplicationContext());
+        mMovementAdapter = new MovementServerAdapter(this.getApplicationContext());
 
         //sets up the sensor manager and retrieves the accelerometer and magnetic field
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -154,8 +162,69 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         //creates a publish subject to publish the pitch of the device
-        pitchPublisher = PublishSubject.create();
+        mAzimuthPublisher = PublishSubject.create();
+        mPitchPublisher = PublishSubject.create();
+    }
 
+    /*
+     * Turns the rover when the device rotates
+     */
+    private void turnRover() {
+
+        mAzimuthPublisher
+                .distinctUntilChanged()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Integer, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(Integer azimuth) throws Exception {
+                        //if the device is nearly horizontal then we use azimuth to calculate where the rover should move
+                        if (mRoll < 25 && mRoll > -20) {
+                            if (azimuth > 40 && azimuth < 70)
+                                return Observable.just(Constants.ROVER_TURN_LEFT);
+                            if (azimuth > 85 && azimuth < 120)
+                                return Observable.just(Constants.ROVER_TURN_RIGHT);
+                        }
+                        return Observable.empty();
+                    }
+                })
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String turn) throws Exception {
+                        turnRover(turn);
+                    }
+                });
+
+        mPitchPublisher
+                .distinctUntilChanged()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Integer, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(Integer pitch) throws Exception {
+                        //if the device is nearly vertical then we use pitch to calculate where the rover should move
+                        if (mRoll > -120 && mRoll < -20) {
+                            if (pitch > 15 && pitch < 50)
+                                return Observable.just(Constants.ROVER_TURN_LEFT);
+                            if (pitch > -50 && pitch < -20)
+                                return Observable.just(Constants.ROVER_TURN_RIGHT);
+                        }
+                        return Observable.empty();
+                    }
+                })
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String turn) throws Exception {
+                        turnRover(turn);
+                    }
+                });
+    }
+
+    private void turnRover(String turn) {
+        if (turn.equals(Constants.ROVER_TURN_LEFT))
+            Log.d("TURN", "azimuth turn left");
+        if (turn.equals(Constants.ROVER_TURN_RIGHT))
+            Log.d("TURN", "azimuth turn right");
     }
 
     private void registerSensors() {
@@ -236,8 +305,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mPitchTextView.setText("Pitch: " + mPitch);
                 mRollTextView.setText("Roll: " + mRoll);
 
-                //publishes the pitch of the device
-                pitchPublisher.onNext(mPitch);
+                //publishes the azimuth, pitch, roll of the device
+                mPitchPublisher.onNext(mPitch);
+                mAzimuthPublisher.onNext(mAzimuth);
             }
         }
     }
