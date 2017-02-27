@@ -293,8 +293,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void accept(String moveString) throws Exception {
                         switch (moveString) {
                             case Constants.MOVE_ROVER_FORWARD:
+                                moveRoverForward();
                                 break;
                             case Constants.MOVE_ROVER_BACKWARD:
+                                moveRoverBackward();
                                 break;
                             case Constants.ROVER_TURN_LEFT:
                                 turnRoverLeft();
@@ -303,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 turnRoverRight();
                                 break;
                             case Constants.STOP_ROVER:
+                                stopRover();
                                 break;
                         }
                     }
@@ -316,6 +319,54 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mMoveRoverPublisher.onNext(Constants.ROVER_TURN_RIGHT);
     }
 
+
+    /*
+     * Moves the rover forward
+     */
+
+    private void moveRoverForward() {
+        mMoveRoverForwardObservable = mMovementAdapter.moveRoverForward();
+        mMoveRoverForwardDisposable = mMoveRoverForwardObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        throwable.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    /*
+     * Moves the rover backward
+     */
+
+    private void moveRoverBackward() {
+        mMoveRoverBackwardObservable = mMovementAdapter.moveRoverBackward();
+        mMoveRoverBackwardDisposable = mMoveRoverBackwardObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        throwable.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
     /*
      * Turns the rover left
      */
@@ -327,12 +378,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        Log.d("TURN", "turning rover left");
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        Log.d("TURN", "error");
                         throwable.printStackTrace();
                         Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
                     }
@@ -351,18 +400,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        Log.d("TURN", "turning rover right");
 
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        Log.d("TURN", "error");
                         throwable.printStackTrace();
                         Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
+    /*
+     * Stops the rover from moving
+     */
+
+    private void stopRover() {
+        mStopRoverObservable = mMovementAdapter.stopRover();
+        mStopRoverDisposable = mStopRoverObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        throwable.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
 
     private void registerSensors() {
         //register this activity as the listener to retieve the values from the 2 sensors
