@@ -16,6 +16,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:windowSoftInputMode="adjustPan"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
