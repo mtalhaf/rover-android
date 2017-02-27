@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -153,6 +154,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mAzimutTextView = (TextView) findViewById(R.id.azimutTextView);
         mPitchTextView = (TextView) findViewById(R.id.pitchTextView);
         mRollTextView = (TextView) findViewById(R.id.rollTextView);
+
+        mKeepRoverMovingButton = (Button) findViewById(R.id.keepRoverMovingButton);
+        mRoverMovementJoyStick = (JoystickView) findViewById(R.id.roverMovementJoyStick);
     }
 
     private void setUpViewListeners() {
@@ -161,6 +165,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 sendMessage();
+            }
+        });
+
+        //setsup the move rover button listener, the rover will move while this is pressed otherwise a stop command is sent
+        mKeepRoverMovingButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_UP:
+                        mMoveRover = false;
+                        break;
+                    case MotionEvent.ACTION_DOWN:
+                        mMoveRover = true;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        mMoveRover = true;
+                        break;
+                }
+                return false;
+            }
+        });
+
+        //moves the rover in the forward or backwards direction
+        mRoverMovementJoyStick.setOnMoveListener(new JoystickView.OnMoveListener() {
+            @Override
+            public void onMove(int angle, int strength) {
+                if(strength > 10){
+                    mMoveRover = true;
+                    if (angle >= 0 && angle < 180)
+                        mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_FORWARD);
+                    if (angle >= 180 && angle <360)
+                        mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_BACKWARD);
+
+                }else{
+                    mMoveRover = false;
+                    mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
+                }
             }
         });
     }
@@ -236,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 });
 
+        //this publisher makes sure that the moving commands are only sent when they are changed
         mMoveRoverPublisher
                 .distinctUntilChanged()
                 .subscribeOn(Schedulers.io())
@@ -243,13 +285,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .flatMap(new Function<String, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(String moveString) throws Exception {
-                        return  mMoveRover ? Observable.just(moveString) : Observable.just(Constants.STOP_ROVER);
+                        return mMoveRover ? Observable.just(moveString) : Observable.just(Constants.STOP_ROVER);
                     }
                 })
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String moveString) throws Exception {
-                        switch (moveString){
+                        switch (moveString) {
                             case Constants.MOVE_ROVER_FORWARD:
                                 break;
                             case Constants.MOVE_ROVER_BACKWARD:
