@@ -10,17 +10,50 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.rovercontroller.mtalhaf.rovercontroller.activity.MainActivity">
 
-    <EditText
-        android:id="@+id/displayMessageEditText"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="display message on rover"/>
+        android:layout_height="wrap_content">
 
-    <Button
-        android:id="@+id/displayMessageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/displayMessageEditText"
-        android:text="Send"/>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/displayMessageEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="display message on rover" />
+
+            <Button
+                android:id="@+id/displayMessageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/displayMessageEditText"
+                android:text="Send" />
+
+            <TextView
+                android:id="@+id/azimutTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/displayMessageButton"
+                android:text="Azimut: "/>
+
+            <TextView
+                android:id="@+id/pitchTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/azimutTextView"
+                android:text="pitch: "/>
+
+            <TextView
+                android:id="@+id/rollTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/pitchTextView"
+                android:text="roll: "/>
+
+        </RelativeLayout>
+    </ScrollView>
 
 </RelativeLayout>
