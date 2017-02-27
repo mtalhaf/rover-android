@@ -116,6 +116,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //checks to see if the command should be sent to the rover
     boolean mMoveRover;
 
+    //checks to see if the rover is moving forward or backwards
+    boolean mRoverMovingForwardOrBackward;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -192,15 +195,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mRoverMovementJoyStick.setOnMoveListener(new JoystickView.OnMoveListener() {
             @Override
             public void onMove(int angle, int strength) {
-                if(strength > 10){
+                if (strength > 10) {
                     mMoveRover = true;
+                    mRoverMovingForwardOrBackward = true;
                     if (angle >= 0 && angle < 180)
                         mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_FORWARD);
-                    if (angle >= 180 && angle <360)
+                    if (angle >= 180 && angle < 360)
                         mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_BACKWARD);
 
-                }else{
+                } else {
                     mMoveRover = false;
+                    mRoverMovingForwardOrBackward = false;
                     mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
                 }
             }
@@ -314,10 +319,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void turnRover(String turn) {
-        if (turn.equals(Constants.ROVER_TURN_LEFT))
-            mMoveRoverPublisher.onNext(Constants.ROVER_TURN_LEFT);
-        if (turn.equals(Constants.ROVER_TURN_RIGHT))
-            mMoveRoverPublisher.onNext(Constants.ROVER_TURN_RIGHT);
+        if (!mRoverMovingForwardOrBackward) {
+            if (turn.equals(Constants.ROVER_TURN_LEFT))
+                mMoveRoverPublisher.onNext(Constants.ROVER_TURN_LEFT);
+            if (turn.equals(Constants.ROVER_TURN_RIGHT))
+                mMoveRoverPublisher.onNext(Constants.ROVER_TURN_RIGHT);
+        }
     }
 
 
