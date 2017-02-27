@@ -24,6 +24,7 @@ import com.rovercontroller.mtalhaf.rovercontroller.utility.Constants;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github.controlwear.virtual.joystick.android.JoystickView;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -44,6 +45,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView mAzimutTextView;
     TextView mPitchTextView;
     TextView mRollTextView;
+
+    //button to keep the rover moving
+    Button mKeepRoverMovingButton;
+
+    //joystick to move the rover forwards or backwards
+    JoystickView mRoverMovementJoyStick;
+
 
     /*
      * The adapter used to connect to different resources of the API
@@ -100,6 +108,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     int mAzimuth;
     int mPitch;
     int mRoll;
+
+    //PublishSubject which will move the rover in one direction at a time or stop it
+    PublishSubject<String> mMoveRoverPublisher;
+
+    //checks to see if the command should be sent to the rover
+    boolean mMoveRover;
 
 
     @Override
@@ -161,9 +175,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-        //creates a publish subject to publish the pitch of the device
+        //creates publish subject to publish the pitch and azimuth of the device
         mAzimuthPublisher = PublishSubject.create();
         mPitchPublisher = PublishSubject.create();
+
+        //crates publisher for moving the rover
+        mMoveRoverPublisher = PublishSubject.create();
     }
 
     /*
@@ -218,13 +235,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         turnRover(turn);
                     }
                 });
+
+        mMoveRoverPublisher
+                .distinctUntilChanged()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String moveString) throws Exception {
+                        return  mMoveRover ? Observable.just(moveString) : Observable.just(Constants.STOP_ROVER);
+                    }
+                })
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String moveString) throws Exception {
+                        switch (moveString){
+                            case Constants.MOVE_ROVER_FORWARD:
+                                break;
+                            case Constants.MOVE_ROVER_BACKWARD:
+                                break;
+                            case Constants.ROVER_TURN_LEFT:
+                                turnRoverLeft();
+                                break;
+                            case Constants.ROVER_TURN_RIGHT:
+                                turnRoverRight();
+                                break;
+                            case Constants.STOP_ROVER:
+                                break;
+                        }
+                    }
+                });
     }
 
     private void turnRover(String turn) {
         if (turn.equals(Constants.ROVER_TURN_LEFT))
-            turnRoverLeft();
+            mMoveRoverPublisher.onNext(Constants.ROVER_TURN_LEFT);
         if (turn.equals(Constants.ROVER_TURN_RIGHT))
-            turnRoverRight();
+            mMoveRoverPublisher.onNext(Constants.ROVER_TURN_RIGHT);
     }
 
     /*
@@ -287,6 +334,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (!mDisplayMessageDisposable.isDisposed())
                 mDisplayMessageDisposable.dispose();
 
+        if (mMoveRoverForwardDisposable != null)
+            if (!mMoveRoverForwardDisposable.isDisposed())
+                mMoveRoverForwardDisposable.dispose();
+
+        if (mMoveRoverBackwardDisposable != null)
+            if (!mMoveRoverBackwardDisposable.isDisposed())
+                mMoveRoverBackwardDisposable.dispose();
+
         if (mTurnRoverLeftDisposable != null)
             if (!mTurnRoverLeftDisposable.isDisposed())
                 mTurnRoverLeftDisposable.dispose();
@@ -294,6 +349,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (mTurnRoverRightDisposable != null)
             if (!mTurnRoverRightDisposable.isDisposed())
                 mTurnRoverRightDisposable.dispose();
+
+        if (mStopRoverDisposable != null)
+            if (!mStopRoverDisposable.isDisposed())
+                mStopRoverDisposable.dispose();
 
         //unregisters the sensor callbacks
         mSensorManager.unregisterListener(this);
