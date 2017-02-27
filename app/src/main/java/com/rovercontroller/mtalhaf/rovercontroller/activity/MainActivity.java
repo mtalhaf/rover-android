@@ -23,16 +23,16 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText displayMessageEditText;
-    Button displayMessageButton;
+    EditText mDisplayMessageEditText;
+    Button mDisplayMessageButton;
 
-    TextView azimutTextView;
-    TextView pitchTextView;
-    TextView rollTextView;
+    TextView mAzimutTextView;
+    TextView mPitchTextView;
+    TextView mRollTextView;
 
-    LcdAdapter lcdAdapter;
-    Observable<String> displayMessageObservable;
-    Disposable displayMessageDisposable;
+    LcdAdapter mLcdAdapter;
+    Observable<String> mDisplayMessageObservable;
+    Disposable mDisplayMessageDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,16 +55,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpViews() {
-        displayMessageEditText = (EditText) findViewById(R.id.displayMessageEditText);
-        displayMessageButton = (Button) findViewById(R.id.displayMessageButton);
+        mDisplayMessageEditText = (EditText) findViewById(R.id.displayMessageEditText);
+        mDisplayMessageButton = (Button) findViewById(R.id.displayMessageButton);
 
-        azimutTextView = (TextView) findViewById(R.id.azimutTextView);
-        pitchTextView = (TextView) findViewById(R.id.pitchTextView);
-        rollTextView = (TextView) findViewById(R.id.rollTextView);
+        mAzimutTextView = (TextView) findViewById(R.id.azimutTextView);
+        mPitchTextView = (TextView) findViewById(R.id.pitchTextView);
+        mRollTextView = (TextView) findViewById(R.id.rollTextView);
     }
 
     private void setUpViewListeners() {
-        displayMessageButton.setOnClickListener(new View.OnClickListener() {
+        mDisplayMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sendMessage();
@@ -73,21 +73,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpVariables() {
-        lcdAdapter = new LcdServerAdapter(this.getApplicationContext());
+        mLcdAdapter = new LcdServerAdapter(this.getApplicationContext());
     }
 
     private void cleanUp() {
-        if (displayMessageDisposable != null)
-            if (!displayMessageDisposable.isDisposed())
-                displayMessageDisposable.dispose();
+        if (mDisplayMessageDisposable != null)
+            if (!mDisplayMessageDisposable.isDisposed())
+                mDisplayMessageDisposable.dispose();
     }
 
     private void sendMessage() {
         Map<String, String> options = new HashMap<>();
-        options.put("message", String.valueOf(displayMessageEditText.getText()));
+        options.put("message", String.valueOf(mDisplayMessageEditText.getText()));
 
-        displayMessageObservable = lcdAdapter.displayMessage(options);
-        displayMessageDisposable = displayMessageObservable
+        mDisplayMessageObservable = mLcdAdapter.displayMessage(options);
+        mDisplayMessageDisposable = mDisplayMessageObservable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
