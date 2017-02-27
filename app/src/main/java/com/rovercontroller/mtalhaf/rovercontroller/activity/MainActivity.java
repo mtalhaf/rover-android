@@ -175,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_UP:
                         mMoveRover = false;
+                        mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
                         break;
                     case MotionEvent.ACTION_DOWN:
                         mMoveRover = true;
