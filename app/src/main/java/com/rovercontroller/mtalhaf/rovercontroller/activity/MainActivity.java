@@ -1,5 +1,10 @@
 package com.rovercontroller.mtalhaf.rovercontroller.activity;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -21,7 +26,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     EditText mDisplayMessageEditText;
     Button mDisplayMessageButton;
@@ -33,6 +38,18 @@ public class MainActivity extends AppCompatActivity {
     LcdAdapter mLcdAdapter;
     Observable<String> mDisplayMessageObservable;
     Disposable mDisplayMessageDisposable;
+
+    SensorManager mSensorManager;
+    Sensor mAccelometer;
+    Sensor mMagneticField;
+
+    float mGravity[];
+    float mGeomagnetic[];
+
+    int azimut;
+    int pitch;
+    int roll;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         setUpVariables();
+        registerSensors();
     }
 
     @Override
@@ -74,12 +92,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpVariables() {
         mLcdAdapter = new LcdServerAdapter(this.getApplicationContext());
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mAccelometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+    }
+
+    private void registerSensors() {
+        mSensorManager.registerListener(this, mAccelometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void cleanUp() {
         if (mDisplayMessageDisposable != null)
             if (!mDisplayMessageDisposable.isDisposed())
                 mDisplayMessageDisposable.dispose();
+
+        mSensorManager.unregisterListener(this);
     }
 
     private void sendMessage() {
@@ -102,5 +132,34 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Error: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimut = (int) Math.toDegrees(orientation[0]); // orientation contains: azimut, pitch and roll
+                pitch = (int) Math.toDegrees(orientation[1]);
+                roll = (int) Math.toDegrees(orientation[2]);
+
+                mAzimutTextView.setText("azimut: " + azimut);
+                mPitchTextView.setText("pitch: " + pitch);
+                mRollTextView.setText("roll: " + roll);
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
