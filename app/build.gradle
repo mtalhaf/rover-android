@@ -37,4 +37,7 @@ dependencies {
     //OkHttp Client used to handle the underlying communication protocols
     compile 'com.squareup.okhttp3:okhttp:3.3.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.3.0'
+    //for using the joystick
+    compile 'io.github.controlwear:virtualjoystick:1.0.1'
+
 }
