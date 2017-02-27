@@ -240,6 +240,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void accept(String s) throws Exception {
                         Log.d("TURN", "turning rover left");
                     }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        throwable.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 
@@ -257,6 +263,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void accept(String s) throws Exception {
                         Log.d("TURN", "turning rover right");
 
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Toast.makeText(MainActivity.this, "Can't connect to the API", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
