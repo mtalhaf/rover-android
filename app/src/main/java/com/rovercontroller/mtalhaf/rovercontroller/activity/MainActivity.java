@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,6 +26,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -64,6 +66,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Sensor mAccelerometer;
     Sensor mMagneticField;
 
+    //publisher to publish the device rotational values
+    PublishSubject<Integer> pitchPublisher;
+
     //hold the gravity and geo magnetic values
     float mGravity[];
     float mGeomagnetic[];
@@ -93,6 +98,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //registers the sensors
         registerSensors();
+
+        //sets up the rover turning method
+        turnRover();
+    }
+
+    /*
+     * Turns the rover when the device rotates
+     */
+    private void turnRover() {
+        pitchPublisher
+                .distinctUntilChanged()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) throws Exception {
+                        Log.d("TURN", "Pitch: " + integer);
+                    }
+                });
     }
 
     @Override
@@ -128,6 +152,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        //creates a publish subject to publish the pitch of the device
+        pitchPublisher = PublishSubject.create();
 
     }
 
@@ -208,6 +235,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mAzimutTextView.setText("Azimuth: " + mAzimuth);
                 mPitchTextView.setText("Pitch: " + mPitch);
                 mRollTextView.setText("Roll: " + mRoll);
+
+                //publishes the pitch of the device
+                pitchPublisher.onNext(mPitch);
             }
         }
     }
