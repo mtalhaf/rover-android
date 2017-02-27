@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
                 }
             }
-        });
+        }, 500);
     }
 
     private void setUpVariables() {
