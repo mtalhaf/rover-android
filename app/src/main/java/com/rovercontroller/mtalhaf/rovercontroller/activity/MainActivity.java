@@ -68,10 +68,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Observable<String> mMoveRoverBackwardObservable;
     Disposable mMoveRoverBackwardDisposable;
 
-    Observable<String> mTurnRoverLeftObservalbe;
+    Observable<String> mTurnRoverLeftObservable;
     Disposable mTurnRoverLeftDisposable;
 
-    Observable<String> mTurnRoverRightObservalbe;
+    Observable<String> mTurnRoverRightObservable;
     Disposable mTurnRoverRightDisposable;
 
     Observable<String> mStopRoverObservable;
@@ -222,9 +222,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void turnRover(String turn) {
         if (turn.equals(Constants.ROVER_TURN_LEFT))
-            Log.d("TURN", "azimuth turn left");
+            turnRoverLeft();
         if (turn.equals(Constants.ROVER_TURN_RIGHT))
-            Log.d("TURN", "azimuth turn right");
+            turnRoverRight();
+    }
+
+    /*
+     * Turns the rover left
+     */
+    private void turnRoverLeft() {
+        mTurnRoverLeftObservable = mMovementAdapter.turnRoverLeft();
+        mTurnRoverLeftDisposable = mTurnRoverLeftObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+                        Log.d("TURN", "turning rover left");
+                    }
+                });
+    }
+
+    /*
+     * Turns the rover right
+     */
+
+    private void turnRoverRight() {
+        mTurnRoverRightObservable = mMovementAdapter.turnRoverRight();
+        mTurnRoverRightDisposable = mTurnRoverRightObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+                        Log.d("TURN", "turning rover right");
+
+                    }
+                });
     }
 
     private void registerSensors() {
@@ -234,10 +268,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void cleanUp() {
-        //disposes off the display message observable
+        //disposes off the observables
         if (mDisplayMessageDisposable != null)
             if (!mDisplayMessageDisposable.isDisposed())
                 mDisplayMessageDisposable.dispose();
+
+        if (mTurnRoverLeftDisposable != null)
+            if (!mTurnRoverLeftDisposable.isDisposed())
+                mTurnRoverLeftDisposable.dispose();
+
+        if (mTurnRoverRightDisposable != null)
+            if (!mTurnRoverRightDisposable.isDisposed())
+                mTurnRoverRightDisposable.dispose();
 
         //unregisters the sensor callbacks
         mSensorManager.unregisterListener(this);
