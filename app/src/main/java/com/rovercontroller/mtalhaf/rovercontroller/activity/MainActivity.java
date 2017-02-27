@@ -28,6 +28,9 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    /*
+     * The following lines of code are declaration of all the views in the main activity
+     */
     EditText mDisplayMessageEditText;
     Button mDisplayMessageButton;
 
@@ -35,34 +38,60 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView mPitchTextView;
     TextView mRollTextView;
 
+    /*
+     * The adapter used to connect to different resources of the API
+     */
+    
+    //contains all the lcd manipulation functions
     LcdAdapter mLcdAdapter;
+    
+    /*
+     * All the observables and disposables used for connecting to the API
+     */
+    
+    //observable and disposable for displaying a message on the lcd screen
     Observable<String> mDisplayMessageObservable;
     Disposable mDisplayMessageDisposable;
 
+    /*
+     * The following code is used to get the gyroscope values from the android device
+     */
+    
+    //Android device sensor manager, this is used to retrieve the 2 accelerometer and magnetic field sensors
     SensorManager mSensorManager;
-    Sensor mAccelometer;
+    
+    //sensor variables to hold the accelerometer and magnetic field meter
+    Sensor mAccelerometer;
     Sensor mMagneticField;
 
+    //hold the gravity and geo magnetic values
     float mGravity[];
     float mGeomagnetic[];
 
-    int azimut;
-    int pitch;
-    int roll;
+    // variables to hold the azimut, pitch and roll
+    int mAzimuth;
+    int mPitch;
+    int mRoll;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //sets up the views finding them in the layout
         setUpViews();
+        //set up view listeners
         setUpViewListeners();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        //initilises all the variables
         setUpVariables();
+
+        //registers the sensors
         registerSensors();
     }
 
@@ -82,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void setUpViewListeners() {
+        //sets up the display message button which sends a message to display on the Lcd screen
         mDisplayMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,27 +121,37 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void setUpVariables() {
+        //sets up the lcd adapter
         mLcdAdapter = new LcdServerAdapter(this.getApplicationContext());
 
+        //sets up the sensor manager and retrieves the accelerometer and magnetic field
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
     }
 
     private void registerSensors() {
-        mSensorManager.registerListener(this, mAccelometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //register this activity as the listener to retieve the values from the 2 sensors
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void cleanUp() {
+        //disposes off the display message observable
         if (mDisplayMessageDisposable != null)
             if (!mDisplayMessageDisposable.isDisposed())
                 mDisplayMessageDisposable.dispose();
 
+        //unregisters the sensor callbacks
         mSensorManager.unregisterListener(this);
     }
 
+    /*
+     * This method sends the message type on the edit text box to the
+     * backend API. the API will publish the message on a topic which
+     * will display that message on the lcd placed on the rover
+     */
     private void sendMessage() {
         Map<String, String> options = new HashMap<>();
         options.put("message", String.valueOf(mDisplayMessageEditText.getText()));
@@ -134,26 +174,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 });
     }
 
+    /*
+     * Retrieves the sensor change events and calculates the relative Azimuth, Pitch and Roll
+     * of the device.
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
+        //checks if the sensor event type is the accelerometer
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             mGravity = event.values;
+        //checks if the sensor event type is the magnetic field sensor
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
             mGeomagnetic = event.values;
+
+        // if gravity and geomagnetic values are present then calculate azimuth, pitch and roll
         if (mGravity != null && mGeomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
+            //get the rotation matrix
             boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            //checks to see if all the data is present
             if (success) {
                 float orientation[] = new float[3];
+                //gets the orientation of the device
                 SensorManager.getOrientation(R, orientation);
-                azimut = (int) Math.toDegrees(orientation[0]); // orientation contains: azimut, pitch and roll
-                pitch = (int) Math.toDegrees(orientation[1]);
-                roll = (int) Math.toDegrees(orientation[2]);
 
-                mAzimutTextView.setText("azimut: " + azimut);
-                mPitchTextView.setText("pitch: " + pitch);
-                mRollTextView.setText("roll: " + roll);
+                //pulls out the respective values
+                mAzimuth = (int) Math.toDegrees(orientation[0]); // orientation contains: mAzimuth, mPitch and mRoll
+                mPitch = (int) Math.toDegrees(orientation[1]);
+                mRoll = (int) Math.toDegrees(orientation[2]);
+
+                //displays the values on the screen
+                mAzimutTextView.setText("Azimuth: " + mAzimuth);
+                mPitchTextView.setText("Pitch: " + mPitch);
+                mRollTextView.setText("Roll: " + mRoll);
             }
         }
     }
