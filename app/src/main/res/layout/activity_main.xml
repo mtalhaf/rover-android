@@ -38,9 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
                 android:text="Azimut: "/>
 
             <TextView
@@ -48,9 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
                 android:layout_below="@id/azimutTextView"
                 android:text="pitch: "/>
 
@@ -59,9 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
                 android:layout_below="@id/pitchTextView"
                 android:text="roll: "/>
 
@@ -70,7 +64,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:text="Move rover"/>
 
@@ -79,7 +72,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
                 android:text="Move rover"/>
 
