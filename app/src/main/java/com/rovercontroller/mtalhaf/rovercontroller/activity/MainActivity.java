@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onMove(int angle, int strength) {
                 if (strength > 10) {
-                    mMoveRover = true;
                     mRoverMovingForwardOrBackward = true;
                     if (angle >= 0 && angle < 180)
                         mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_FORWARD);
