@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.rovercontroller.mtalhaf.rovercontroller.R;
@@ -24,6 +25,10 @@ public class MainActivity extends AppCompatActivity {
 
     EditText displayMessageEditText;
     Button displayMessageButton;
+
+    TextView azimutTextView;
+    TextView pitchTextView;
+    TextView rollTextView;
 
     LcdAdapter lcdAdapter;
     Observable<String> displayMessageObservable;
@@ -52,6 +57,10 @@ public class MainActivity extends AppCompatActivity {
     private void setUpViews() {
         displayMessageEditText = (EditText) findViewById(R.id.displayMessageEditText);
         displayMessageButton = (Button) findViewById(R.id.displayMessageButton);
+
+        azimutTextView = (TextView) findViewById(R.id.azimutTextView);
+        pitchTextView = (TextView) findViewById(R.id.pitchTextView);
+        rollTextView = (TextView) findViewById(R.id.rollTextView);
     }
 
     private void setUpViewListeners() {
