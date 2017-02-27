@@ -16,4 +16,20 @@ public interface RestfulRetrofitService {
 
     @GET("v1.0/lcd/print")
     Observable<String> displayMessage(@QueryMap Map<String, String> options);
+
+    @GET("v1.0/movement/moveforward")
+    Observable<String> moveRoverForward();
+
+    @GET("v1.0/movement/movebackward")
+    Observable<String> moveRoverBackward();
+
+    @GET("v1.0/movement/turnleft")
+    Observable<String> turnRoverLeft();
+
+    @GET("v1.0/movement/turnright")
+    Observable<String> turnRoverRight();
+
+    @GET("v1.0/movement/stoprover")
+    Observable<String> stopRover();
+
 }
