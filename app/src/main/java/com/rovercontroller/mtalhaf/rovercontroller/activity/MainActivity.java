@@ -98,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Sensor mMagneticField;
 
     //publisher to publish the device rotational values
-    PublishSubject<Integer> mAzimuthPublisher;
     PublishSubject<Integer> mPitchPublisher;
 
     //hold the gravity and geo magnetic values
@@ -178,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_UP:
                         mMoveRover = false;
-                        mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
+                        moveRover(Constants.STOP_ROVER);
                         break;
                     case MotionEvent.ACTION_DOWN:
                         mMoveRover = true;
@@ -198,14 +197,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (strength > 10) {
                     mRoverMovingForwardOrBackward = true;
                     if (angle >= 0 && angle < 180)
-                        mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_FORWARD);
+                        moveRover(Constants.MOVE_ROVER_FORWARD);
                     if (angle >= 180 && angle < 360)
-                        mMoveRoverPublisher.onNext(Constants.MOVE_ROVER_BACKWARD);
+                        moveRover(Constants.MOVE_ROVER_BACKWARD);
 
                 } else {
                     mMoveRover = false;
                     mRoverMovingForwardOrBackward = false;
-                    mMoveRoverPublisher.onNext(Constants.STOP_ROVER);
+                    moveRover(Constants.STOP_ROVER);
                 }
             }
         }, 500);
@@ -221,8 +220,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-        //creates publish subject to publish the pitch and azimuth of the device
-        mAzimuthPublisher = PublishSubject.create();
+        //creates publish subject to publish the pitch of the device
         mPitchPublisher = PublishSubject.create();
 
         //crates publisher for moving the rover
@@ -234,35 +232,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void turnRover() {
 
-        mAzimuthPublisher
-                .distinctUntilChanged()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<Integer, ObservableSource<String>>() {
-                    @Override
-                    public ObservableSource<String> apply(Integer azimuth) throws Exception {
-                        //if the device is nearly horizontal then we use azimuth to calculate where the rover should move
-                        if (mRoll < 25 && mRoll > -20) {
-                            //turn the rover left if the device is turning left
-                            if (azimuth > 40 && azimuth < 70)
-                                return Observable.just(Constants.ROVER_TURN_LEFT);
-                            //turn the rover right if the device is turning right
-                            if (azimuth > 85 && azimuth < 120)
-                                return Observable.just(Constants.ROVER_TURN_RIGHT);
-                            //stops the rover if the device is nearly straight
-                            if(azimuth > 70 && azimuth < 85)
-                                return Observable.just(Constants.STOP_ROVER);
-                        }
-                        return Observable.empty();
-                    }
-                })
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String turn) throws Exception {
-                        turnRover(turn);
-                    }
-                });
-
         mPitchPublisher
                 .distinctUntilChanged()
                 .subscribeOn(Schedulers.io())
@@ -270,6 +239,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 .flatMap(new Function<Integer, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(Integer pitch) throws Exception {
+
+                        //if the rover is move forward or backward we do not turn the rover
+                        if (mRoverMovingForwardOrBackward)
+                            return Observable.empty();
+
                         //if the device is nearly vertical then we use pitch to calculate where the rover should move
                         if (mRoll > -120 && mRoll < -20) {
                             //turn the rover left if the device is turning left
@@ -279,16 +253,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             if (pitch > -50 && pitch < -20)
                                 return Observable.just(Constants.ROVER_TURN_RIGHT);
                             //stops the rover if the device is nearly straight
-                            if(pitch > -20 && pitch < 15)
+                            if (pitch > -20 && pitch < 15)
                                 return Observable.just(Constants.STOP_ROVER);
                         }
+
                         return Observable.empty();
                     }
                 })
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String turn) throws Exception {
-                        turnRover(turn);
+                        moveRover(turn);
                     }
                 });
 
@@ -303,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         return mMoveRover ? Observable.just(moveString) : Observable.just(Constants.STOP_ROVER);
                     }
                 })
+                .distinctUntilChanged()
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String moveString) throws Exception {
@@ -327,9 +303,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 });
     }
 
-    private void turnRover(String roverMovement) {
-        if (!mRoverMovingForwardOrBackward)
-                mMoveRoverPublisher.onNext(roverMovement);
+    /*
+     * Publishes the rover movement
+     */
+    private void moveRover(String roverMovement) {
+        mMoveRoverPublisher.onNext(roverMovement);
     }
 
 
@@ -546,9 +524,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mPitchTextView.setText("Pitch: " + mPitch);
                 mRollTextView.setText("Roll: " + mRoll);
 
-                //publishes the azimuth, pitch, roll of the device
+                //publishes the pitch
                 mPitchPublisher.onNext(mPitch);
-                mAzimuthPublisher.onNext(mAzimuth);
             }
         }
     }
