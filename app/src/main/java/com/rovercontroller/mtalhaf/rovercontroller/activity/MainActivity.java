@@ -243,10 +243,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public ObservableSource<String> apply(Integer azimuth) throws Exception {
                         //if the device is nearly horizontal then we use azimuth to calculate where the rover should move
                         if (mRoll < 25 && mRoll > -20) {
+                            //turn the rover left if the device is turning left
                             if (azimuth > 40 && azimuth < 70)
                                 return Observable.just(Constants.ROVER_TURN_LEFT);
+                            //turn the rover right if the device is turning right
                             if (azimuth > 85 && azimuth < 120)
                                 return Observable.just(Constants.ROVER_TURN_RIGHT);
+                            //stops the rover if the device is nearly straight
+                            if(azimuth > 70 && azimuth < 85)
+                                return Observable.just(Constants.STOP_ROVER);
                         }
                         return Observable.empty();
                     }
@@ -267,10 +272,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public ObservableSource<String> apply(Integer pitch) throws Exception {
                         //if the device is nearly vertical then we use pitch to calculate where the rover should move
                         if (mRoll > -120 && mRoll < -20) {
+                            //turn the rover left if the device is turning left
                             if (pitch > 15 && pitch < 50)
                                 return Observable.just(Constants.ROVER_TURN_LEFT);
+                            //turn the rover right if the device is turning right
                             if (pitch > -50 && pitch < -20)
                                 return Observable.just(Constants.ROVER_TURN_RIGHT);
+                            //stops the rover if the device is nearly straight
+                            if(pitch > -20 && pitch < 15)
+                                return Observable.just(Constants.STOP_ROVER);
                         }
                         return Observable.empty();
                     }
