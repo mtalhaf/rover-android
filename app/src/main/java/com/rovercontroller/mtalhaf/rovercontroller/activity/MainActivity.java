@@ -327,13 +327,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 });
     }
 
-    private void turnRover(String turn) {
-        if (!mRoverMovingForwardOrBackward) {
-            if (turn.equals(Constants.ROVER_TURN_LEFT))
-                mMoveRoverPublisher.onNext(Constants.ROVER_TURN_LEFT);
-            if (turn.equals(Constants.ROVER_TURN_RIGHT))
-                mMoveRoverPublisher.onNext(Constants.ROVER_TURN_RIGHT);
-        }
+    private void turnRover(String roverMovement) {
+        if (!mRoverMovingForwardOrBackward)
+                mMoveRoverPublisher.onNext(roverMovement);
     }
 
 
